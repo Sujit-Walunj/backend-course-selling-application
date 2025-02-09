@@ -1,32 +1,25 @@
 const jwt = require("jsonwebtoken");
-const JWT_SECRETE = "Sujit1589";
-async function authUser (req,res,next){
 
-    const token = req.heders.token;
-    if(!token){
-        res.send("Invalid token / token not present");
+async function authAdmin(req, res, next) {
+
+    const token = req.headers.token;
+    if (!token) {
+        res.send("token not present");
         return;
     }
 
 
-    try {    
-        const data = jwt.verify(token,JWT_SECRETE);
-        
-        const userId = data.userId;
-        const role = data.role;
-        if(role != 'admin'){
-            res.json("Sorry you are not authorized");
-            return;
-        }
-        req.body.userId  = userId;
+    try {
+        const data = jwt.verify(token, process.env.JWT_SECRETE_ADMIN);
+        req.body.userId = data.userId;;
         next();
-        } 
-catch(e){
+    }
+    catch (e) {
         res.send("Invalid Token");
         return;
-}
+    }
 }
 
 module.exports = {
-    authUser : authUser
+    authAdmin: authAdmin
 }

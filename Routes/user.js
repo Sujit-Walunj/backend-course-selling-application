@@ -8,7 +8,6 @@ const { authUser } = require("../Middlewares/user");
 
 const userRouter = Router(); // this might be returning app
 
-const JWT_SECRET = "Sujit1589";
 
 userRouter.post("/sign-up" ,async function(req,res){
     // input validation
@@ -29,23 +28,18 @@ userRouter.post("/sign-up" ,async function(req,res){
             return;
         }
         
-        // get email and password and other data. 
-        const email     = req.body.email;
-        const password  = req.body.password;
-        const firstname = req.body.firstname
-        const lastname  = req.body.lastname;
-         
-        // hash password
+        
+        const {email,password,firstname,lastname} = req.body;
+             
+
         const hashedPassword  = await bcrypt.hash(password,10);
         try {
-
             await userModel.create({
                 email       : email,
                 password    : hashedPassword,
                 firstname   : firstname,
                 lastname    : lastname
             })
-
         }
         catch(e){
             console.log("Error in creating database entry for new user");
@@ -55,12 +49,9 @@ userRouter.post("/sign-up" ,async function(req,res){
             })
             return;
         }
-
         res.status(200).json({
             msg : "Your account created successfully"
         })
-
-
 })
 
 userRouter.post("/login" ,async function(req,res){
@@ -79,9 +70,8 @@ userRouter.post("/login" ,async function(req,res){
         return;
     }
 
-    // check if user exist
-    const email = req.body.email;
-
+ 
+    const{ email} = req.body;
     const user = await userModel.findOne({email : email});
 
     if(!user){
@@ -92,23 +82,20 @@ userRouter.post("/login" ,async function(req,res){
     }
 
     const password = req.body.password;
-
     const isUser = bcrypt.compare(password,user.password);
 
     if(isUser){
-
         const token = jwt.sign(
             {
                 userId : user._id,
                 role : "user" },
-                    JWT_SECRET
+                process.env.JWT_SECRETE_USER
                     )
         res.status(200).json({
             msg : "You are logged in successfully",
             token : token
         })
         return ;
-
     }
     else{
 
@@ -122,15 +109,22 @@ userRouter.post("/login" ,async function(req,res){
 
 userRouter.get("/course",authUser,async function(req,res){
     
-    res.send("hitting course endpoint");
-
-    const data = courseModel.find();
+   let data = null;
+    try{
+         data = await courseModel.find({});
+    }
+    catch(e){
+        console.log(e);
+        res.json({
+            msg:"Internal Server Error"
+        })
+        return;
+    }
 
     res.status(200).json({
         msg: "Successfully fatched all Courses",
         courses : data 
     })
-
     return;
 })
 
